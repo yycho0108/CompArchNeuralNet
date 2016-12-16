@@ -3,7 +3,7 @@
 #include <iostream>
 
 void usage(){
-	fprintf(stderr, "USAGE : hex2float <a> <b>\n");
+	fprintf(stderr, "USAGE : f2h <a> <b>\n");
 }
 
 int main(int argc, char* argv[]){
