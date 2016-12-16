@@ -30,39 +30,44 @@ reg add_start;
 reg add_rst_n;
 
 always @(posedge clk or negedge rst_n) begin
-	case(stage)
-		0: begin
-			add_rst_n = 1'b0;
-			if(done_l && done_r) begin
-				stage = 1; // go to next stage
-				add_start = 1'b1;
+	if(rst_n == 0 | start) begin
+		add_rst_n = 1'b0;
+		stage = 0;
+	end else begin
+		case(stage)
+			0: begin
+				add_rst_n = 1'b0;
+				if(done_l && done_r) begin
+					stage = 1; // go to next stage
+					add_start = 1'b1;
+				end
 			end
-		end
-		1: begin
-			add_start = 1'b0;
-			add_rst_n = 1'b1;
-		end
-		default: begin
+			1: begin
+				add_start = 1'b0;
+				add_rst_n = 1'b1;
+			end
+			default: begin
 
-		end
-	endcase
+			end
+		endcase
+	end
 end
 
 wire nan, overflow, underflow, zero; // don't really care for now
 wire done_l, done_r;
 wire [C-1:0] wtf;
+wire add_done;
 
 if(C == 1) begin
 	// direct assignment
 	assign O = I;
-	assign done = 1'b1;
+	assign done = 1;
 end else begin
 	wire [S-1:0] o_l;
 	wire [S-1:0] o_r;
 
 	accumulate #(.S(S), .C(C-X)) ac_l(rst_n, clk, start, I[S*C-1:S*X], o_l, done_l); // accumulate left side
 	accumulate #(.S(S), .C(X)) ac_r(rst_n, clk,  start, I[S*X-1:0], o_r, done_r); // accumulate right side
-
 	add_float #(.FLOAT_WIDTH(S)) add(add_rst_n, clk, add_start, 1'b0, o_l, o_r, O, nan, overflow, underflow, zero, done);
 end
 endmodule
@@ -84,27 +89,19 @@ module matmul // size = 32 bits, width, height, common
 	output done
 );
 
-// stage : multiplication -> accumulation
-
-reg [1:0] stage;
-reg stage_done;
-
 wire nan;
 wire overflow;
 wire underflow;
 wire zero;
 
-assign done = 1'b1;
-
-always@(posedge clk or negedge rst_n) begin
-	stage <= 0;
-end
+reg [H*W-1:0] done_mask;
+wire [H*W-1:0] add_done;
 
 always @(posedge clk) begin
-	if(stage_done) begin
-		stage <= stage + 1;
-		stage_done <= 1'b0;
-		// reset stage_done
+	if(start | rst_n == 0) begin
+		done_mask = {H*W-1{1'b0}};
+	end else begin
+		done_mask = done_mask | add_done;
 	end
 end
 
@@ -112,57 +109,28 @@ genvar i,j,k;
 integer l;
 
 generate
-wire add_start;
-
-assign mul_start = start;
-assign add_start = stage_done & (stage == `S_MUL);
 
 for(i=0; i<H; i=i+1) begin: row
 	for(j=0; j<W; j=j+1) begin: col
 
-		//case(stage)
-		//	default:
-		//endcase
-
 		wire [S*C-1:0] o_tmp; // store multiplication results
-		wire [S-1:0] o_tmp_2;
-		wire [C-1:0] done_tmp;
-
-		wire add_start = &done_tmp; // triggered when all multiplications are over for this element
-
-		// instantiate modules
+		wire [C-1:0] mult_done;
 		
 		// multiply
 		for(k=0; k<C; k=k+1) begin : mul
-			mul_float #(.FLOAT_WIDTH(S)) mul(rst_n, clk, mul_start, `ELEM(a,i,k,H,C,S), `ELEM(b,k,j,C,W,S), `ELEM(o_tmp,0,k,1,C,S), nan, overflow, underflow, zero, done_tmp[k]);
+			mul_float #(.FLOAT_WIDTH(S)) mul(rst_n, clk, mul_start, `ELEM(a,i,k,H,C,S), `ELEM(b,k,j,C,W,S), `ELEM(o_tmp,0,k,1,C,S), nan, overflow, underflow, zero, mult_done[k]);
 			// -->outputs stored to C-length array o_tmp
 		end
 
+		wire add_start = &mult_done; // triggered when all multiplications are over for this element
 		// accumulate
-		wire accum_done;
-		accumulate #(.S(32), .C(C)) acc(rst_n, clk, add_start, o_tmp, `ELEM(o,i,j,H,W,S), accum_done);
-
-		//always @(posedge add_start) begin
-		//end
-
-		// accumulate
-		//for(k=C-1; k>0; k=k/2) begin
-		//	//if (k == 0) begin
-
-		//	//end
-		//	// here, 1'b0 == add, 1'b1 == sub
-		//	add_float #(.FLOAT_WIDTH(S)) add(rst_n, clk, add_start, 1'b0, o_tmp_2, o_tmp[(k+1)*S-1:k*S], o_tmp[(k+2)*S-1:(k+1)*S], nan, overflow, underflow, zero, done_2);
-		//end
-
-		always @(posedge clk) begin
-			//assign stage_done = &done_tmp;
-		end
-
-
+		accumulate #(.S(32), .C(C)) acc(rst_n, clk, add_start, o_tmp, `ELEM(o,i,j,H,W,S), add_done[i*W+j]);
 	end
 end
 
 endgenerate
+
+assign done = &done_mask; // only done when all elements are completed
 
 endmodule
 
