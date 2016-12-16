@@ -45,6 +45,18 @@ initial begin
 	start = 1'b0;
 	rst_n = 1'b1;
 	#500;
+
+	rst_n = 1'b0;
+	@(negedge clk);
+
+	a = {32'hbf4ac269, 32'h40a00000, 32'h40a00000, 32'h40a00000};
+	b = {32'h40a00000, 32'h40a00000, 32'h40a00000, 32'h40a00000};
+
+	start = 1'b1;
+	@(negedge clk);
+	start = 1'b0;
+	rst_n = 1'b1;
+	#500;
 	$finish;
 end
 
