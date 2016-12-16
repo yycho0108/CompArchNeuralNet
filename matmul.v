@@ -3,7 +3,7 @@
 `include "add_float.v"
 
 // TODO : check valid index
-`define IDX(i,j,h,w) (h*w - (i*w+j) - 1)
+`define IDX(i,j,h,w) (((h)*(w)-1) - ((j)*(h)+i)) // indexed somewhat unconventionally
 `define ELEM(m,i,j,h,w,s) m[s*(1+`IDX(i,j,h,w))-1:s*`IDX(i,j,h,w)]
 
 
@@ -64,7 +64,6 @@ end
 
 wire nan, overflow, underflow, zero; // don't really care for now
 wire done_l, done_r;
-wire [C-1:0] wtf;
 wire add_done;
 
 if(C == 1) begin
@@ -78,7 +77,7 @@ end else begin
 	accumulate #(.S(S), .C(C-X)) ac_l(rst_n, clk, start, I[S*C-1:S*X], o_l, done_l); // accumulate left side
 	accumulate #(.S(S), .C(X)) ac_r(rst_n, clk,  start, I[S*X-1:0], o_r, done_r); // accumulate right side
 	add_float #(.FLOAT_WIDTH(S)) add(add_rst_n, clk, add_start, 1'b0, o_l, o_r, O, nan, overflow, underflow, zero, add_done);
-	assign done = (stage == 2) | add_done ;
+	assign done = (stage == 2) | (stage == 1 & add_done);
 end
 endmodule
 
@@ -123,7 +122,16 @@ module matmul // size = 32 bits, width, height, common
 			for(k=0; k<C; k=k+1) begin : mul
 				mul_float #(.FLOAT_WIDTH(S)) mul(rst_n, clk, start, `ELEM(a,i,k,H,C,S), `ELEM(b,k,j,C,W,S), `ELEM(o_tmp,0,k,1,C,S), nan, overflow, underflow, zero, mult_done[k]);
 				// -->outputs stored to C-length array o_tmp
+				always @(o_tmp) begin
+					if(i == 0 && j == 1) begin
+						$write("(%d, %d) * (%d,%d)\n", i, k, k, j);
+						$write("%H * ", `ELEM(a,i,k,H,C,S));
+						$write("%H = ", `ELEM(b,k,j,C,W,S));
+						$write("%H\n ", `ELEM(o_tmp,0,k,1,C,S));
+					end
+				end
 			end
+
 
 			wire mult_all_done = &mult_done; // triggered when all multiplications are over for this element
 
@@ -136,7 +144,7 @@ module matmul // size = 32 bits, width, height, common
 			end
 
 			// accumulate
-			accumulate #(.S(32), .C(C)) acc(rst_n, clk, accum_start, o_tmp, `ELEM(o,i,j,H,W,S), add_done[i*W+j]);
+			accumulate #(.S(32), .C(C)) acc(rst_n, clk, accum_start, o_tmp, `ELEM(o,j,i,W,H,S), add_done[i*W+j]);
 		end
 	end
 

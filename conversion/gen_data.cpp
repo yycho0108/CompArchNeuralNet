@@ -30,10 +30,17 @@ void print_hex(char name, const arma::mat& m){
 	}
 }
 
+void print_verilog_hex(char name, const arma::mat& m){
+	std::cout << name << " = {";
+	for(auto& e : m){
+		std::cout << "32'h" << f2h(e) << ", ";
+	}
+	std::cout << "};" << std::endl;
+}
 int main(){
+	int h = 2;
 	int w = 2;
-	int h = 3;
-	int c = 1;
+	int c = 3;
 
 	//std::cout << f2h(2.0) << std::endl;
 	//std::cout << h2f(f2h(2.0)) << std::endl;
@@ -47,6 +54,8 @@ int main(){
 	std::cout << o << std::endl;
 
 
+	//print_verilog_hex('a', a);
+	//print_verilog_hex('b', b);
 	print_hex('a', a);
 	print_hex('b', b);
 	print_hex('o', a*b);
