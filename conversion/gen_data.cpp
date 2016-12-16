@@ -38,8 +38,8 @@ void print_verilog_hex(char name, const arma::mat& m){
 	std::cout << "};" << std::endl;
 }
 int main(){
-	int h = 2;
-	int w = 2;
+	int h = 4;
+	int w = 6;
 	int c = 3;
 
 	//std::cout << f2h(2.0) << std::endl;
@@ -54,8 +54,8 @@ int main(){
 	std::cout << o << std::endl;
 
 
-	//print_verilog_hex('a', a);
-	//print_verilog_hex('b', b);
+	print_verilog_hex('a', a);
+	print_verilog_hex('b', b);
 	print_hex('a', a);
 	print_hex('b', b);
 	print_hex('o', a*b);

@@ -122,14 +122,15 @@ module matmul // size = 32 bits, width, height, common
 			for(k=0; k<C; k=k+1) begin : mul
 				mul_float #(.FLOAT_WIDTH(S)) mul(rst_n, clk, start, `ELEM(a,i,k,H,C,S), `ELEM(b,k,j,C,W,S), `ELEM(o_tmp,0,k,1,C,S), nan, overflow, underflow, zero, mult_done[k]);
 				// -->outputs stored to C-length array o_tmp
-				always @(o_tmp) begin
-					if(i == 0 && j == 1) begin
-						$write("(%d, %d) * (%d,%d)\n", i, k, k, j);
-						$write("%H * ", `ELEM(a,i,k,H,C,S));
-						$write("%H = ", `ELEM(b,k,j,C,W,S));
-						$write("%H\n ", `ELEM(o_tmp,0,k,1,C,S));
-					end
-				end
+				// debugging
+				//always @(o_tmp) begin
+				//	if(i == 0 && j == 1) begin
+				//		$write("(%d, %d) * (%d,%d)\n", i, k, k, j);
+				//		$write("%H * ", `ELEM(a,i,k,H,C,S));
+				//		$write("%H = ", `ELEM(b,k,j,C,W,S));
+				//		$write("%H\n ", `ELEM(o_tmp,0,k,1,C,S));
+				//	end
+				//end
 			end
 
 
