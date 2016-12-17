@@ -12,11 +12,11 @@ module sigmoid
 	output [S*N-1:0] y,
 	output done
 );
+
 // implements fast sigmoid, x / (1 + abs(x))
 
-
-// x -> abs(x) -> 1.0 + % -> x/% -> 1 + % + 0.5 * %
-reg [2:0] stage;
+// x -> abs(x) -> 1.0 + % -> x/% -> 1 + % -> 0.5 * %
+reg [2:0] stage; // up to 8
 wire [31:0] absx;
 assign absx = {1'b0, x[S*N-2:0]};
 wire [31:0] one = 32'h3f800000;
@@ -24,13 +24,18 @@ wire [31:0] half = 32'h3f000000;
 
 wire [S*N-1:0] opax; // one plus abs x
 wire [S*N-1:0] xdo; // x div. opax
+wire [S*N-1:0] hpx; // half plus xdo
 
-wire stage_done[3:0];
+wire [3:0] stage_done;
 
 reg add_start;
 reg div_start;
 reg add_start_2;
 reg mul_start;
+
+reg add_rst_n;
+reg div_rst_n;
+reg mul_rst_n;
 
 initial begin
 	stage = 0;
@@ -41,31 +46,82 @@ initial begin
 end
 
 always @(posedge clk) begin
-	case(stage)
-		0: begin
-			add_start = 1'b1;
-			stage = stage + 1;
-		end
-		1: begin
-			add_start = 1'b0;
-			if(stage_done[0])
-			   stage = stage + 1;	
-		end
-		2: begin
-			div_start = 1'b1;
-			stage = stage + 1;
-		end
-		3: begin
-		end
-		default: begin
-		end
-	endcase
+
+	if(rst_n == 0 | start) begin
+		add_start = 1'b0;
+		stage = 0;
+	end else begin
+
+		case(stage)
+			0: begin
+				add_rst_n = 1'b0;
+				add_start = 1'b1;
+
+				div_rst_n = 1'b0;
+				div_start = 1'b0;
+				add_start_2 = 1'b0;
+				mul_rst_n = 1'b0;
+				mul_start = 1'b0;
+				stage = stage + 1;
+			end
+
+			1: begin
+				add_rst_n = 1'b1;
+				add_start = 1'b0;
+
+				add_start_2 = 1'b0;
+				mul_start = 1'b0;
+				if(stage_done[0]) begin
+					stage = stage + 1;	
+				end
+			end
+			2: begin
+				add_rst_n = 1'b0;
+				div_start = 1'b1;
+				div_rst_n = 1'b0;
+				stage = stage + 1;
+			end
+			3: begin
+				div_rst_n = 1'b1;
+				div_start = 1'b0;
+				if(stage_done[1]) begin
+					stage = stage+1;
+				end
+			end
+			4: begin
+				add_start_2 = 1'b1;
+				stage = stage + 1;
+			end
+			5: begin
+				add_start_2 = 1'b0;
+				if(stage_done[2]) begin
+					stage = stage + 1;
+				end
+			end
+			6: begin
+				mul_rst_n = 1'b0;
+				mul_start = 1'b1;
+				stage = stage + 1;
+			end
+			7: begin
+				mul_rst_n = 1'b1;
+				mul_start = 1'b0;
+				//if(stage_done[3]) begin
+				//	stage = stage + 1;
+				//end
+			end
+			default: begin
+
+			end
+		endcase
+	end
 end
+
 // TODO : change start/done signals
-add_float #(.FLOAT_WIDTH(S)) a1(rst_n, clk, start, 1'b0, absx, one, opax, nan, overflow, underflow, zero, stage_done[0]);
-div_float #(.FLOAT_WIDTH(S)) d1(rst_n, clk, stage_done[0], x, opax, xdo, zero, nan, overflow, underflow, zero_reg, stage_done[1]);
-add_float #(.FLOAT_WIDTH(S)) a2(rst_n, clk, stage_done[1], 1'b0, absx, one, opax, nan, overflow, underflow, zero, stage_done[2]);
-mul_float #(.FLOAT_WIDTH(S)) mul(rst_n, clk, stage_done[2], xdo, half, y, nan, overflow, underflow, zero, stage_done[3]);
+add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, opax, nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
+div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, x, opax, xdo, zero, nan, overflow, underflow, zero_reg, stage_done[1]); // x / (abs(x)+1)
+add_float #(.FLOAT_WIDTH(S)) a2(rst_n, clk, add_start_2, 1'b0, xdo, one, hpx, nan, overflow, underflow, zero, stage_done[2]);
+mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, hpx, half, y, nan, overflow, underflow, zero, stage_done[3]);
 
 assign done = stage_done[3];
 endmodule

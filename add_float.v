@@ -29,7 +29,7 @@ module add_float
   //-----------
 
   reg [STAGES_WIDTH - 1: 0] stage;
-  wire [STAGES_WIDTH - 1: 0] next_stage = (stage < STAGES - 1'b1)? stage + 1'b1: 0;
+  wire [STAGES_WIDTH - 1: 0] next_stage = (stage < STAGES - 1'b1)? stage + 1'b1: stage;
   always@(posedge clk or negedge rst_n)
   begin
     //stage increment

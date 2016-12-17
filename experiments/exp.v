@@ -626,7 +626,7 @@ program p(y[31],y[30:23],y[22:0],x[31],x[30:23],x[22:0]);
 initial begin
 	$dumpfile("exp.vcd");
 	$dumpvars(0, test_exp);
-	x = 32'h40000000;
+	x = 32'h38a00000;
 	#50000;
 	$display("%H", y);
 end

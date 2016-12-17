@@ -9,5 +9,5 @@ comp_float.o : comp_float.v comp_float.t.v
 matmul.o : matmul.v matmul.t.v
 	iverilog matmul.t.v -o matmul.o
 
-sigmoid.o : sigmoid.v sigmoid.t.v
+sigmoid.o : sigmoid.v sigmoid.t.v add_float.v mul_float.v div_float.v
 	iverilog sigmoid.t.v -o sigmoid.o
