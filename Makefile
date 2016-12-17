@@ -1,4 +1,4 @@
-all : mul_float.o comp_float.o matmul.o sigmoid.o
+all : mul_float.o comp_float.o matmul.o sigmoid.o net.o
 
 mul_float.o : mul_float.v mul_float.t.v
 	iverilog mul_float.t.v -o mul_float.o
@@ -11,3 +11,6 @@ matmul.o : matmul.v matmul.t.v
 
 sigmoid.o : sigmoid.v sigmoid.t.v add_float.v mul_float.v div_float.v
 	iverilog sigmoid.t.v -o sigmoid.o
+
+net.o : sigmoid.o matmul.o
+	iverilog net.t.v -o net.o

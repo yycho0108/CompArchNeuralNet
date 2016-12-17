@@ -89,14 +89,14 @@ module matmul // size = 32 bits, width, height, common
 	// H*C * C*W = H*W
 	// row major
 	input rst_n,
-		input clk,
-		input start,
+	input clk,
+	input start,
 
-		input [S*H*C-1:0] a,
-		input [S*C*W-1:0] b,
-		output [S*H*W-1:0] o,
-		output done
-	);
+	input [S*H*C-1:0] a,
+	input [S*C*W-1:0] b,
+	output [S*H*W-1:0] o,
+	output done
+);
 
 	wire nan;
 	wire overflow;
