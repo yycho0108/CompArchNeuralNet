@@ -1,6 +1,7 @@
 `include "div_float.v"
 `include "mul_float.v"
 `include "add_float.v"
+`define GET(v,e,s) v[(e+1)*s-1:e*s]
 
 module sigmoid
 #(parameter S=32, parameter N=1)
@@ -17,8 +18,6 @@ module sigmoid
 
 // x -> abs(x) -> 1.0 + % -> x/% -> 1 + % -> 0.5 * %
 reg [2:0] stage; // up to 8
-wire [31:0] absx;
-assign absx = {1'b0, x[S*N-2:0]};
 wire [31:0] one = 32'h3f800000;
 wire [31:0] half = 32'h3f000000;
 
@@ -95,10 +94,16 @@ always @(posedge clk) begin
 end
 
 // TODO : change start/done signals
-add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, opax, nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
-div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, x, opax, xdo, zero, nan, overflow, underflow, zero_reg, stage_done[1]); // x / (abs(x)+1)
-add_float #(.FLOAT_WIDTH(S)) a2(rst_n, clk, add_start_2, 1'b0, xdo, one, hpx, nan, overflow, underflow, zero, stage_done[2]);
-mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, hpx, half, y, nan, overflow, underflow, zero, stage_done[3]);
+generate
+genvar i;
+for(i=0; i<N; i=i+1) begin : each
+	wire [S-1:0] absx = {1'b0, x[S*(i+1)-1:S*i]};
+	add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
+	div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), zero, nan, overflow, underflow, zero_reg, stage_done[1]); // x / (abs(x)+1)
+	add_float #(.FLOAT_WIDTH(S)) a2(rst_n, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
+	mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
+	assign done = stage_done[3];
+end
+endgenerate
 
-assign done = stage_done[3];
 endmodule
