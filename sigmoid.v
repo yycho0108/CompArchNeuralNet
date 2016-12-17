@@ -28,84 +28,61 @@ wire [S*N-1:0] hpx; // half plus xdo
 
 wire [3:0] stage_done;
 
-reg add_start;
-reg div_start;
-reg add_start_2;
-reg mul_start;
+wire add_start;
+wire div_start;
+wire add_start_2;
+wire mul_start;
 
-reg add_rst_n;
-reg div_rst_n;
-reg mul_rst_n;
+assign add_start = (stage == 0);
+assign div_start = (stage == 2);
+assign add_start_2 = (stage == 4);
+assign mul_start = (stage == 6);
+
+wire add_rst_n = (stage == 1);
+wire div_rst_n = (stage == 3);
+wire add_rst_n_2 = (stage == 5);
+wire mul_rst_n = (stage == 7);
 
 initial begin
 	stage = 0;
-	add_start = 0;
-	div_start = 0;
-	add_start_2 = 0;
-	mul_start = 0;
 end
 
 always @(posedge clk) begin
 
 	if(rst_n == 0 | start) begin
-		add_start = 1'b0;
 		stage = 0;
 	end else begin
 
 		case(stage)
 			0: begin
-				add_rst_n = 1'b0;
-				add_start = 1'b1;
-
-				div_rst_n = 1'b0;
-				div_start = 1'b0;
-				add_start_2 = 1'b0;
-				mul_rst_n = 1'b0;
-				mul_start = 1'b0;
 				stage = stage + 1;
 			end
 
 			1: begin
-				add_rst_n = 1'b1;
-				add_start = 1'b0;
-
-				add_start_2 = 1'b0;
-				mul_start = 1'b0;
 				if(stage_done[0]) begin
 					stage = stage + 1;	
 				end
 			end
 			2: begin
-				add_rst_n = 1'b0;
-				div_start = 1'b1;
-				div_rst_n = 1'b0;
 				stage = stage + 1;
 			end
 			3: begin
-				div_rst_n = 1'b1;
-				div_start = 1'b0;
 				if(stage_done[1]) begin
 					stage = stage+1;
 				end
 			end
 			4: begin
-				add_start_2 = 1'b1;
 				stage = stage + 1;
 			end
 			5: begin
-				add_start_2 = 1'b0;
 				if(stage_done[2]) begin
 					stage = stage + 1;
 				end
 			end
 			6: begin
-				mul_rst_n = 1'b0;
-				mul_start = 1'b1;
 				stage = stage + 1;
 			end
 			7: begin
-				mul_rst_n = 1'b1;
-				mul_start = 1'b0;
 				//if(stage_done[3]) begin
 				//	stage = stage + 1;
 				//end
