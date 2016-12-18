@@ -5,7 +5,6 @@
 `include "matmul.v"
 `include "add_float.v"
 
-
 /// vectorized float addition
 
 module add_float_v
@@ -26,7 +25,7 @@ wire [N-1:0] done_elem;
 
 genvar i;
 generate
-for(i=0;i<N;i=i+1) begin
+for(i=0;i<N;i=i+1) begin: add_elem
 	add_float #(.FLOAT_WIDTH(S)) add(rst_n, clk, start, 1'b0, a[(i+1)*S-1: i*S], b[(i+1)*S-1:i*S], o[(i+1)*S-1:i*S], nan, overflow, underflow, zero, done_elem[i]);
 end
 endgenerate
@@ -35,49 +34,42 @@ assign done = &done_elem; // done only when all done
 
 endmodule
 
-module net
-#(
-	parameter I = 784,
-	parameter O = 10,
-	parameter D = 1 // depth of array
-)
+
+module layer
+#(parameter S=32, I=1, O=1)
 (
 	input clk,
 	input rst_n,
 	input start,
-	input [I*32-1:0] x,
-	output [O*32-1:0] y,
+	input [I*S-1:0] x,
+	output [O*S-1:0] y,
 	output done
 );
 
+
 reg [2:0] stage = 0;
 
-wire start_1;
-wire start_2;
+reg [S-1:0] _W[0:O*I-1];
+reg [S-1:0] _b[0:O-1];
 
-wire done_1;
-wire done_2;
+wire [S*O*I-1:0] W;
+wire [S*O-1:0] b;
 
-//reg [32*H*I-1:0] w_1; // H x I, I --> H
-//reg [32*O*H-1:0] w_2; // O x H, H --> O
-//
-//reg [32*H*1-1:0] b_1;
-//reg [32*O*1-1:0] b_2;
-//
-//wire [32*H*1-1:0] o_1;
-//wire [32*O*1-1:0] o_2;
-//
-//assign start_1 = start;
-//matmul #(.S(32), .W(1), .H(H), .C(I)) m_1(rst_n, clk, start_1, w_1, x, o_1, done_1);
-//assign start_2 = done_1;
-//matmul #(.S(32), .W(1), .H(O), .C(H)) m_2(rst_n, clk, start_2, w_2, o_1, o_2, done_2);
-//assign done = done_2;
+// unpack
+genvar i,o;
+generate
+for(o=0; o<O; o=o+1) begin
+	assign b[S*(o+1)-1:S*o] = _b[o];
+	for(i=0; i<I; i=i+1) begin
+		assign `ELEM(W,o,i,O,I,S) = _W[i];
+	end
+end
 
-reg [32*O*I-1:0] W=0;
-reg [32*O-1:0] b=0;
 
-wire [32*O-1:0] o_1;
-wire [32*O-1:0] o_2;
+endgenerate
+
+wire [S*O-1:0] o_1;
+wire [S*O-1:0] o_2;
 
 wire mul_start;
 wire add_start;
@@ -90,45 +82,124 @@ wire sig_done;
 assign mul_start = (stage == 0);
 assign add_start = (stage == 2);
 assign sig_start = (stage == 4);
+assign done = (stage == 6);
 
-always @(posedge clk) begin
+always @(negedge clk) begin
 	if(start) begin
 		stage = 0;
-	end else begin
-		case(stage)
-			0: begin
-				stage = 1;
-			end
-			1: begin
-				if(mul_done) begin
-					stage = 3;
-				end
-			end
-			2: begin
-				stage = 3;
-			end
-			3: begin
-				if(add_done) begin
-					stage = 2;
-				end
-			end
-			4: begin
-				stage = 5;
-			end
-			5: begin
+	end 
+end
 
+always @(posedge clk) begin
+	case(stage)
+		0: begin
+			stage = 1;
+		end
+		1: begin
+			if(mul_done) begin
+				stage = stage + 1;
 			end
-			default: begin
+		end
+		2: begin
+			stage = 3;
+		end
+		3: begin
+			if(add_done) begin
+				stage = stage + 1;
+			end
+		end
+		4: begin
+			stage = 5;
+		end
+		5: begin
+			if(sig_done) begin
+				stage = stage + 1;
+			end
+		end
+		6: begin
+			//stay at 6
+		end
+		default: begin
 
-			end
-		endcase
+		end
+	endcase
+end
+
+matmul #(.S(S), .W(1), .H(O), .C(I)) m(rst_n, clk, mul_start, W, x, o_1, mul_done);
+add_float_v #(.S(S), .N(O)) add(rst_n, clk, add_start, o_1, b, o_2, add_done); // o_1 -(+b)-> o_2
+sigmoid #(.S(S), .N(O)) sig(clk, rst_n, sig_start, o_2,  y, sig_done); //o_2 -(sig())-> y
+
+endmodule
+
+
+module net
+#(
+	parameter I = 784,
+	parameter O = 10,
+	parameter H = 75,
+	parameter D = 1 // depth of array
+)
+(
+	input clk,
+	input rst_n,
+	input start,
+	input [I*32-1:0] x,
+	output [O*32-1:0] y,
+	output done
+);
+
+
+
+localparam S = 32;
+
+reg [2:0] stage = 0;
+always @(negedge clk) begin
+	if(start) begin
+		stage = 0;
 	end
 end
 
-matmul #(.S(32), .W(1), .H(O), .C(I)) m(rst_n, clk, mul_start, W, x, o_1, mul_done);
-add_float_v #(.S(32), .N(O)) add(rst_n, clk, add_start, o_1, b, o_2, add_done); // o_1 -(+b)-> o_2
-sigmoid #(.S(32), .N(O)) sig(clk, rst_n, o_2, sig_start, y, sig_done); //o_2 -(sig())-> y
-assign done = sig_done;
+wire [H*32-1:0] o_1; // intermediate unit for hidden layer
+wire done_1, done_2;
+wire start_1, start_2;
+
+layer #(.S(S), .I(I), .O(H))  l_1(clk, rst_n, start_1, x, o_1, done_1);
+layer #(.S(S), .I(H), .O(O)) l_2(clk, rst_n, start_2, o_1, y, done_2);
+
+initial begin
+	$readmemh("w1.txt", l_1._W);
+	$readmemh("b1.txt", l_1._b);
+	$readmemh("w2.txt", l_2._W);
+	$readmemh("b2.txt", l_2._b);
+end
+
+assign start_1 = (stage == 0);
+assign start_2 = (stage == 2);
+assign done = (stage == 4);
+
+always @(posedge clk) begin
+	case(stage)
+		0: begin
+			stage = stage + 1;
+		end
+		1: begin
+			if(done_1)
+				stage = stage + 1;
+		end
+		2: begin
+			stage = stage + 1;
+		end
+		3: begin
+			if(done_2)
+				stage = stage + 1;
+		end
+		4: begin
+
+		end
+	endcase
+end
+
+endmodule
 
 //genvar i;
 //generate
@@ -152,5 +223,5 @@ assign done = sig_done;
 	//	// load weights and biases
 	//end
 
-	endmodule
+
 `endif

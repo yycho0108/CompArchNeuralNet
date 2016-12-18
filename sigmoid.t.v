@@ -12,7 +12,7 @@ reg [32*`NUM-1:0] x;
 wire [32*`NUM-1:0] y;
 wire done;
 
-sigmoid #(.S(32), .N(`NUM)) s(clk,rst_n,x,start,y,done);
+sigmoid #(.S(32), .N(`NUM)) s(clk,rst_n,start,x,y,done);
 
 always begin
 	#10
@@ -29,7 +29,7 @@ initial begin
 
 	rst_n = 1'b0;
 	@(negedge clk);
-	x = {32'h40a00000, 32'hc0733333};
+	x = {32'h0, 32'h40a00000};
 	start = 1'b1;
 	@(negedge clk);
 	start = 1'b0;
@@ -39,7 +39,7 @@ initial begin
 
 	rst_n = 1'b0;
 	@(negedge clk);
-	x = 32'hc0733333;
+	x = {32'h40a00000, 32'hc0733333};
 	start = 1'b1;
 	@(negedge clk);
 	start = 1'b0;

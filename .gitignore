@@ -249,3 +249,5 @@ ENV/
 
 *.vcd
 *.gtkw
+
+data/

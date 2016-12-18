@@ -10,8 +10,8 @@ module sigmoid
 (
 	input clk,
 	input rst_n,
-	input [S*N-1:0] x,
 	input start,
+	input [S*N-1:0] x,
 	output [S*N-1:0] y,
 	output done
 );
@@ -19,7 +19,7 @@ module sigmoid
 // implements fast sigmoid, x / (1 + abs(x))
 
 // x -> abs(x) -> 1.0 + % -> x/% -> 1 + % -> 0.5 * %
-reg [2:0] stage; // up to 8
+reg [3:0] stage = 0; // up to 8
 wire [31:0] one = 32'h3f800000;
 wire [31:0] half = 32'h3f000000;
 
@@ -39,74 +39,76 @@ assign div_start = (stage == 2);
 assign add_start_2 = (stage == 4);
 assign mul_start = (stage == 6);
 
-wire add_rst_n = (stage == 1);
+wire add_rst_n = (stage == 1) ;
 wire div_rst_n = (stage == 3);
 wire add_rst_n_2 = (stage == 5);
 wire mul_rst_n = (stage == 7);
 
-initial begin
-	stage = 0;
+wire nan, zero, overflow, underflow, done, divzero;
+
+assign done = (stage == 8);
+
+// read ... 
+always @(negedge clk) begin
+	if(start)
+		stage = 0;
 end
 
 always @(posedge clk) begin
-
-	if(rst_n == 0 | start) begin
-		stage = 0;
-	end else begin
-
-		case(stage)
-			0: begin
+	case(stage)
+		0: begin
+			stage = stage + 1;
+		end
+		1: begin
+			if(stage_done[0]) begin
+				stage = stage + 1;	
+			end
+		end
+		2: begin
+			stage = stage + 1;
+		end
+		3: begin
+			if(stage_done[1]) begin
+				stage = stage+1;
+			end
+		end
+		4: begin
+			stage = stage + 1;
+		end
+		5: begin
+			if(stage_done[2]) begin
 				stage = stage + 1;
 			end
+		end
+		6: begin
+			stage = stage + 1;
+		end
+		7: begin
+			if(stage_done[3]) begin
+				stage = stage + 1;
+			end
+		end
+		8: begin
 
-			1: begin
-				if(stage_done[0]) begin
-					stage = stage + 1;	
-				end
-			end
-			2: begin
-				stage = stage + 1;
-			end
-			3: begin
-				if(stage_done[1]) begin
-					stage = stage+1;
-				end
-			end
-			4: begin
-				stage = stage + 1;
-			end
-			5: begin
-				if(stage_done[2]) begin
-					stage = stage + 1;
-				end
-			end
-			6: begin
-				stage = stage + 1;
-			end
-			7: begin
-				//if(stage_done[3]) begin
-				//	stage = stage + 1;
-				//end
-			end
-			default: begin
+		end
+		default: begin
 
-			end
+		end
 		endcase
 	end
-end
 
-// TODO : change start/done signals
-generate
-genvar i;
-for(i=0; i<N; i=i+1) begin : each
-	wire [S-1:0] absx = {1'b0, x[S*(i+1)-1:S*i]};
-	add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
-	div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), zero, nan, overflow, underflow, zero_reg, stage_done[1]); // x / (abs(x)+1)
-	add_float #(.FLOAT_WIDTH(S)) a2(rst_n, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
-	mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
-	assign done = stage_done[3];
-end
-endgenerate
+	// TODO : change start/done signals
+	generate
+	genvar i;
+	for(i=0; i<N; i=i+1) begin : each
+		wire [S-1:0] absx = {1'b0, x[S*(i+1)-1:S*i]};
+		wire dummy;
+		add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, one, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
+		div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), divzero, nan, overflow, underflow, zero, stage_done[1]); // x / (abs(x)+1)
+		add_float #(.FLOAT_WIDTH(S)) a2(add_rst_n_2, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
+		mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
+	end
+	endgenerate
 
-endmodule
+	endmodule
 `endif

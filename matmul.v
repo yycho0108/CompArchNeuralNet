@@ -31,37 +31,38 @@ reg [1:0] stage = 0; //accum --> add
 reg add_start;
 reg add_rst_n;
 
-always @(posedge clk) begin
+always @(negedge clk) begin
 	if(rst_n == 0 | start) begin
 		add_rst_n = 1'b0;
 		add_start = 1'b0;
 		stage = 0;
-	end else begin
-			case(stage)
-				0: begin
-					// accum left, right
-					if(done_l && done_r) begin
-						stage = 1; // go to next stage
-						add_start = 1'b1;
-					end
-				end
-				1: begin
-					add_start = 1'b0;
-					add_rst_n = 1'b1;
-					if(add_done) begin
-						stage = 2;
-					end
-				end
-				2: begin
-					add_start = 1'b0;
-					add_rst_n = 1'b0;
-				end
-				default: begin
+	end 
+end
 
-				end
-			endcase
+always @(posedge clk) begin
+	case(stage)
+		0: begin
+			// accum left, right
+			if(done_l && done_r) begin
+				stage = 1; // go to next stage
+				add_start = 1'b1;
+			end
+		end
+		1: begin
+			add_start = 1'b0;
+			add_rst_n = 1'b1;
+			if(add_done) begin
+				stage = 2;
+			end
+		end
+		2: begin
+			add_start = 1'b0;
+			add_rst_n = 1'b0;
+		end
+		default: begin
 
-	end
+		end
+	endcase
 end
 
 wire nan, overflow, underflow, zero; // don't really care for now
