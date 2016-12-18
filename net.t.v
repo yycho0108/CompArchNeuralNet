@@ -51,7 +51,9 @@ end
 initial begin
 	$dumpfile("net.vcd");
 	$dumpvars(0, test_net);
+	#500;
 	test_xor(zero,one);
+	#500;
 	test_xor(zero,zero);
 	#100;
 	$finish;

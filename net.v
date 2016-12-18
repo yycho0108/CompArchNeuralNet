@@ -46,7 +46,6 @@ module layer
 	output done
 );
 
-
 reg [2:0] stage = 0;
 
 reg [S-1:0] _W[0:O*I-1];
@@ -82,6 +81,11 @@ wire sig_done;
 assign mul_start = (stage == 0);
 assign add_start = (stage == 2);
 assign sig_start = (stage == 4);
+
+wire mul_rst_n = rst_n;
+wire add_rst_n = (stage != 2);
+wire sig_rst_n = (stage != 4);
+
 assign done = (stage == 6);
 
 always @(negedge clk) begin
@@ -125,9 +129,9 @@ always @(posedge clk) begin
 	endcase
 end
 
-matmul #(.S(S), .W(1), .H(O), .C(I)) m(rst_n, clk, mul_start, W, x, o_1, mul_done);
-add_float_v #(.S(S), .N(O)) add(rst_n, clk, add_start, o_1, b, o_2, add_done); // o_1 -(+b)-> o_2
-sigmoid #(.S(S), .N(O)) sig(clk, rst_n, sig_start, o_2,  y, sig_done); //o_2 -(sig())-> y
+matmul #(.S(S), .W(1), .H(O), .C(I)) m(mul_rst_n, clk, mul_start, W, x, o_1, mul_done);
+add_float_v #(.S(S), .N(O)) add(add_rst_n, clk, add_start, o_1, b, o_2, add_done); // o_1 -(+b)-> o_2
+sigmoid #(.S(S), .N(O)) sig(clk, sig_rst_n, sig_start, o_2,  y, sig_done); //o_2 -(sig())-> y
 
 endmodule
 
@@ -148,36 +152,43 @@ module net
 	output done
 );
 
-
-
 localparam S = 32;
 
 reg [2:0] stage = 0;
-always @(negedge clk) begin
-	if(start) begin
-		stage = 0;
-	end
-end
+//always @(negedge clk) begin
+//	if(start) begin
+//		stage = 0;
+//	end
+//end
 
 wire [H*32-1:0] o_1; // intermediate unit for hidden layer
 wire done_1, done_2;
 wire start_1, start_2;
 
-layer #(.S(S), .I(I), .O(H))  l_1(clk, rst_n, start_1, x, o_1, done_1);
-layer #(.S(S), .I(H), .O(O)) l_2(clk, rst_n, start_2, o_1, y, done_2);
+
+layer #(.S(S), .I(I), .O(H)) l_1(clk, l_1_rst_n, start_1, x, o_1, done_1);
+layer #(.S(S), .I(H), .O(O)) l_2(clk, l_2_rst_n, start_2, o_1, y, done_2);
 
 initial begin
-	$readmemh("w1.txt", l_1._W);
-	$readmemh("b1.txt", l_1._b);
-	$readmemh("w2.txt", l_2._W);
-	$readmemh("b2.txt", l_2._b);
+	$readmemh("data/w1.txt", l_1._W);
+	$readmemh("data/b1.txt", l_1._b);
+	$readmemh("data/w2.txt", l_2._W);
+	$readmemh("data/b2.txt", l_2._b);
 end
+
+wire l_1_rst_n = !start_1;
+wire l_2_rst_n = !start_2;
 
 assign start_1 = (stage == 0);
 assign start_2 = (stage == 2);
+
 assign done = (stage == 4);
 
 always @(posedge clk) begin
+	if(start) begin
+		stage = 0;
+	end else begin
+
 	case(stage)
 		0: begin
 			stage = stage + 1;
@@ -197,6 +208,7 @@ always @(posedge clk) begin
 
 		end
 	endcase
+end
 end
 
 endmodule

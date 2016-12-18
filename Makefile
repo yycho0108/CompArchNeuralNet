@@ -15,7 +15,7 @@ matmul.o : matmul.v matmul.t.v
 sigmoid.o : sigmoid.v sigmoid.t.v add_float.v mul_float.v div_float.v
 	iverilog sigmoid.t.v -o sigmoid.o
 
-net.o : net.v net.t.v
+net.o : net.v net.t.v sigmoid.o matmul.o
 	time iverilog net.t.v -o net.o
 
 clean:

@@ -28,14 +28,12 @@ module accumulate
 localparam X = 2 ** ($clog2(C)-1); // splitting line for recursive accumulation
 
 reg [1:0] stage = 0; //accum --> add
-reg add_start;
-reg add_rst_n;
+wire add_start = (stage == 1);
+wire add_rst_n = (stage == 2);
 
 always @(negedge clk) begin
 	if(rst_n == 0 | start) begin
-		add_rst_n = 1'b0;
-		add_start = 1'b0;
-		stage = 0;
+		stage <= 0;
 	end 
 end
 
@@ -44,25 +42,26 @@ always @(posedge clk) begin
 		0: begin
 			// accum left, right
 			if(done_l && done_r) begin
-				stage = 1; // go to next stage
-				add_start = 1'b1;
+				stage <= stage+1;
 			end
 		end
 		1: begin
-			add_start = 1'b0;
-			add_rst_n = 1'b1;
-			if(add_done) begin
-				stage = 2;
-			end
+			// add-start
+			stage <= stage+1;
 		end
 		2: begin
-			add_start = 1'b0;
-			add_rst_n = 1'b0;
+			if(add_done) begin
+				stage <= stage+1;
+			end
+		end
+		3: begin
+
 		end
 		default: begin
 
 		end
 	endcase
+
 end
 
 wire nan, overflow, underflow, zero; // don't really care for now
@@ -80,7 +79,7 @@ end else begin
 	accumulate #(.S(S), .C(C-X)) ac_l(rst_n, clk, start, I[S*C-1:S*X], o_l, done_l); // accumulate left side
 	accumulate #(.S(S), .C(X)) ac_r(rst_n, clk,  start, I[S*X-1:0], o_r, done_r); // accumulate right side
 	add_float #(.FLOAT_WIDTH(S)) add(add_rst_n, clk, add_start, 1'b0, o_l, o_r, O, nan, overflow, underflow, zero, add_done);
-	assign done = (stage == 2) | (stage == 1 & add_done);
+	assign done = (stage == 3);
 end
 endmodule
 
@@ -92,23 +91,54 @@ module matmul // size = 32 bits, width, height, common
 	// H*C * C*W = H*W
 	// row major
 	input rst_n,
-	input clk,
-	input start,
+		input clk,
+		input start,
 
-	input [S*H*C-1:0] a,
-	input [S*C*W-1:0] b,
-	output [S*H*W-1:0] o,
-	output done
-);
+		input [S*H*C-1:0] a,
+		input [S*C*W-1:0] b,
+		output [S*H*W-1:0] o,
+		output done
+	);
+
+	reg [2:0] stage;
+
+	wire mul_start = (stage == 0);
+	wire accum_start = (stage == 2);
+
+	always @(posedge clk) begin
+		if(start)
+			stage = 0;
+		else begin
+			case(stage)
+				0: begin
+					stage = stage + 1;
+				end
+				1: begin
+					if(&mult_all_done)
+						stage = stage + 1;
+				end
+				2: begin
+					stage = stage + 1;
+				end
+				3: begin
+					if(&add_done)
+						stage = stage + 1;
+				end
+				4: begin
+
+				end
+
+			endcase
+		end
+	end
 
 	wire nan;
 	wire overflow;
 	wire underflow;
 	wire zero;
 
-	reg [H*W-1:0] done_mask;
-
 	wire [H*W-1:0] add_done;
+	wire [H*W-1:0] mult_all_done;
 
 	genvar i,j,k;
 	integer l;
@@ -119,7 +149,6 @@ module matmul // size = 32 bits, width, height, common
 		for(j=0; j<W; j=j+1) begin: col
 			wire [S*C-1:0] o_tmp; // store multiplication results
 			wire [C-1:0] mult_done;
-			reg accum_start;
 
 			// multiply
 			for(k=0; k<C; k=k+1) begin : mul
@@ -128,33 +157,24 @@ module matmul // size = 32 bits, width, height, common
 				// debugging
 				//always @(o_tmp) begin
 				//	if(i == 0 && j == 1) begin
-				//		$write("(%d, %d) * (%d,%d)", i, k, k, j);
-				//		$write("%H * ", `ELEM(a,i,k,H,C,S));
-				//		$write("%H = ", `ELEM(b,k,j,C,W,S));
-				//		$write("%H", `ELEM(o_tmp,0,k,1,C,S));
-				//	end
-				//end
+					//		$write("(%d, %d) * (%d,%d)", i, k, k, j);
+					//		$write("%H * ", `ELEM(a,i,k,H,C,S));
+					//		$write("%H = ", `ELEM(b,k,j,C,W,S));
+					//		$write("%H", `ELEM(o_tmp,0,k,1,C,S));
+					//	end
+					//end
+				end
+
+				assign mult_all_done[i*W+j] = &mult_done;
+
+				// accumulate
+				accumulate #(.S(32), .C(C)) acc(rst_n, clk, accum_start, o_tmp, `ELEM(o,j,i,W,H,S), add_done[i*W+j]);
 			end
-
-
-			wire mult_all_done = &mult_done; // triggered when all multiplications are over for this element
-
-			always @(posedge clk) begin
-				accum_start = 1'b0; // reset accum_start
-			end
-
-			always @(posedge mult_all_done) begin
-				accum_start = 1'b1; // only begin when mult is all done
-			end
-
-			// accumulate
-			accumulate #(.S(32), .C(C)) acc(rst_n, clk, accum_start, o_tmp, `ELEM(o,j,i,W,H,S), add_done[i*W+j]);
 		end
-	end
 
-	endgenerate
+		endgenerate
 
-	assign done = &add_done; // only done when all elements are completed
+		assign done = &add_done; // only done when all elements are completed
 
-	endmodule
-`endif
+		endmodule
+	`endif

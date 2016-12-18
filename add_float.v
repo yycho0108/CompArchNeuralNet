@@ -13,7 +13,7 @@ module add_float
   output reg overflow_reg,
   output reg underflow_reg,
   output reg zero_reg,
-  output reg done_reg
+  output done
   );
   localparam EXP_WIDTH = (FLOAT_WIDTH == 64) ? 11: 8; 
   localparam FRACTION_WIDTH = (FLOAT_WIDTH == 64) ? 52: 23;
@@ -26,11 +26,12 @@ module add_float
   localparam NAN_VALUE = (FLOAT_WIDTH == 64) ? 64'hFFF8_0000_0000_0000: 32'hFFC0_0000;
   localparam INF_VALUE = (FLOAT_WIDTH == 64) ? 64'h7FF0_0000_0000_0000: 32'h7F80_0000;
   localparam ZERO_DATA_WIDTH = 7;
-  localparam STAGES = 6; // пока неизвестно кол-во стадий
+  localparam STAGES = 7; // пока неизвестно кол-во стадий
   localparam STAGES_WIDTH = 3;
   //-----------
 
   reg [STAGES_WIDTH - 1: 0] stage;
+  assign done = (stage == STAGES-1);
   wire [STAGES_WIDTH - 1: 0] next_stage = (stage < STAGES - 1'b1)? stage + 1'b1: stage;
   always@(posedge clk or negedge rst_n)
   begin
@@ -76,7 +77,6 @@ module add_float
 	     left_op_reg <= op1;
 	     right_op_reg <= op2;
 	   end
-	   done_reg <= 1'b0;
 	 end
   end
 //----------------------  
@@ -197,7 +197,6 @@ module add_float
         underflow_reg <= 1'b0;
         zero_reg <= 1'b0;
 		end
-	   done_reg <= 1'b1;
 	 end
   end
   
