@@ -12,5 +12,5 @@ matmul.o : matmul.v matmul.t.v
 sigmoid.o : sigmoid.v sigmoid.t.v add_float.v mul_float.v div_float.v
 	iverilog sigmoid.t.v -o sigmoid.o
 
-net.o : sigmoid.o matmul.o
+net.o : sigmoid.o matmul.o net.v net.t.v
 	iverilog net.t.v -o net.o

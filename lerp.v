@@ -1,3 +1,5 @@
+`ifndef __LERP_V__
+`define __LERP_V__
 `include "div_float.v"
 `include "add_float.v"
 `include "mul_float.v"
@@ -39,3 +41,4 @@ div_float #(.FLOAT_WIDTH(S)) d1(rst_n, clk, start, x1, `DELTA, dxx, zero, nan, o
 div_float #(.FLOAT_WIDTH(S)) d2(rst_n, clk, &sub_done, xsx1, x2sx1, zero, nan, overflow, underflow, zero_reg, div_done[1]);
 
 mul_float #(.FLOAT_WIDTH(S)) m1(rst_n, clk, div_done[1], x
+`endif

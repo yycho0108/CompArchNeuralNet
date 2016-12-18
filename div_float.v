@@ -1,3 +1,5 @@
+`ifndef __DIV_FLOAT_V__
+`define __DIV_FLOAT_V__
 module div_float
   #(parameter
    FLOAT_WIDTH = 64
@@ -156,3 +158,4 @@ module div_float
     end
   end
 endmodule
+`endif

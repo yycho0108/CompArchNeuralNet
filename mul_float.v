@@ -1,3 +1,5 @@
+`ifndef __MUL_FLOAT_V__
+`define __MUL_FLOAT_V__
 module mul_float
   #(parameter
    FLOAT_WIDTH = 64
@@ -157,3 +159,4 @@ module mul_float
   end  
   
 endmodule
+`endif

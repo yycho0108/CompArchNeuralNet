@@ -1,3 +1,6 @@
+`ifndef __MATMUL_T_V__
+`define __MATMUL_T_V__
+
 `include "matmul.v"
 
 `define HEIGHT 4
@@ -19,7 +22,7 @@ task print_mat;
 				//$write("%H ", `ELEM(mat, i, j, height, width, 32));
 				$write("%H ", mat[height*width*32-1]);
 			end
-			$write("\n");
+			$write("");
 		end
 	end
 
@@ -45,7 +48,7 @@ end
 
 always @(posedge done) begin
 	$display("a b o");
-	//print_mat(`HEIGHT, `COMMON, a);
+	//print_mat (a);
 	//print_mat(`COMMON, `WIDTH, b);
 	//print_mat(`HEIGHT, `WIDTH, o);
 	$display("%H %H %H", a, b, o);
@@ -82,3 +85,5 @@ b = {32'h3f5dc7de, 32'h3fb18dc7, 32'hbf842b78, 32'h3e9dcabb, 32'hbeb7666c, 32'h3
 end
 
 endmodule
+
+`endif

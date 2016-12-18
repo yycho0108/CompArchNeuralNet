@@ -1,3 +1,5 @@
+`ifndef __COMP_FLOAT_V__
+`define __COMP_FLOAT_V__
 module comp_float(
 	output [2:0] flag, 
 	input [31:0] a,
@@ -31,3 +33,4 @@ assign flag= (sign == 2'b00) ? ((exp == 2'b10) ? 3'b100:
                                 (mag == 2'b01) ? 3'b100:3'b010):
              (sign == 2'b10) ? 3'b100 : 3'b001;                    
 endmodule
+`endif

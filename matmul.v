@@ -1,3 +1,5 @@
+`ifndef __MATMUL_V__
+`define __MATMUL_V__
 `include "mul_float.v"
 
 `include "add_float.v"
@@ -125,10 +127,10 @@ module matmul // size = 32 bits, width, height, common
 				// debugging
 				//always @(o_tmp) begin
 				//	if(i == 0 && j == 1) begin
-				//		$write("(%d, %d) * (%d,%d)\n", i, k, k, j);
+				//		$write("(%d, %d) * (%d,%d)", i, k, k, j);
 				//		$write("%H * ", `ELEM(a,i,k,H,C,S));
 				//		$write("%H = ", `ELEM(b,k,j,C,W,S));
-				//		$write("%H\n ", `ELEM(o_tmp,0,k,1,C,S));
+				//		$write("%H", `ELEM(o_tmp,0,k,1,C,S));
 				//	end
 				//end
 			end
@@ -154,4 +156,4 @@ module matmul // size = 32 bits, width, height, common
 	assign done = &add_done; // only done when all elements are completed
 
 	endmodule
-
+`endif

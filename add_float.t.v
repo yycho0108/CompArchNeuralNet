@@ -1,3 +1,5 @@
+`ifndef __ADD_FLOAT_T_V__
+`define __ADD_FLOAT_T_V__
 `include "add_float.v"
 
 module test_add();
@@ -34,3 +36,4 @@ initial begin
 end
 
 endmodule
+`endif

@@ -1,3 +1,5 @@
+`ifndef __SIGMOID_T_V__
+`define __SIGMOID_T_V__
 `include "sigmoid.v"
 
 `define NUM 2
@@ -49,3 +51,4 @@ initial begin
 end
 
 endmodule
+`endif

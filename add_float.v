@@ -1,3 +1,5 @@
+`ifndef __ADD_FLOAT_V__
+`define __ADD_FLOAT_V__
 module add_float
   #(parameter
    FLOAT_WIDTH = 64
@@ -213,3 +215,4 @@ end
 endfunction
 
 endmodule
+`endif

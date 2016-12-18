@@ -1,3 +1,5 @@
+`ifndef __SIGMOID_V__
+`define __SIGMOID_V__
 `include "div_float.v"
 `include "mul_float.v"
 `include "add_float.v"
@@ -107,3 +109,4 @@ end
 endgenerate
 
 endmodule
+`endif

@@ -1,3 +1,5 @@
+`ifndef __MUL_FLOAT_T_V__
+`define __MUL_FLOAT_T_V__
 `include "mul_float.v"
 
 module test_mul();
@@ -61,3 +63,4 @@ end
 
 
 endmodule
+`endif

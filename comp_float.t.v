@@ -1,3 +1,5 @@
+`ifndef __COMP_FLOAT_T_V__
+`define __COMP_FLOAT_T_V__
 `include "comp_float.v"
 
 module test_comp_float();
@@ -26,3 +28,4 @@ initial begin
 end
 
 endmodule
+`endif
