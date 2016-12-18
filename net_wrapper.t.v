@@ -17,15 +17,16 @@ always begin
 end
 
 initial begin
-	sw[0] = 0;
-	sw[1] = 1;
+	#500;
+	sw[0] = 1;
+	sw[1] = 0;
 	for(i=0; i<5; i=i+1) begin
 		btn[0] = 1;
 		@(negedge clk);
 	end
 	btn[0] = 0;
 	@(posedge led[2]); // wait until led comes up... (indicating "done")
-	$display("%b %b", led[0], led[1]);
+	$display("%b %b %d", led[0], led[1], $time);
 	$finish;
 end
 

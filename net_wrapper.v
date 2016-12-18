@@ -18,7 +18,7 @@ module net_wrapper
 // led[1] indicates true XOR output
 // led[2] indicates that the calculation is done
 
-reg [1:0] stage=0; // idle, reset+load, start, progress
+reg [2:0] stage = 0; // idle, reset+load, start, progress
 
 wire [31:0] one = 32'h3f800000; 
 wire [31:0] zero = 32'h00000000; 
@@ -26,12 +26,12 @@ wire [31:0] half = 32'h3f000000;
 
 wire [31:0] a = sw[0]? one:zero;
 wire [31:0] b = sw[1]? one:zero;
-reg [63:0] x;
+wire [63:0] x = {a,b};
 wire [31:0] y;
 
 wire [2:0] flag;
-reg rst_n;
-reg start;
+wire rst_n = (stage != 1);
+wire start = (stage == 1);
 wire done;
 
 wire btn_cnd; // conditioned button input
@@ -49,19 +49,17 @@ always @(posedge clk) begin
 				stage <= 1; // start
 		end
 		1: begin
-			rst_n <= 1'b0; // reset
 			stage <= 2;
 		end
 		2: begin
-			x <= {a,b}; // load data and start!
-			start <= {1'b1};
 			stage <= 3;
 		end
 		3: begin
-			start <= {1'b0}; //clear start flag
-			rst_n <= 1'b1;
 			if(done)
-				stage <= 0; // back to idle
+				stage <= 4; // back to idle
+		end
+		4: begin
+
 		end
 	endcase
 
@@ -71,5 +69,6 @@ end
 assign led[0] = flag[2];
 assign led[1] = sw[0] ^ sw[1];
 assign led[2] = done;
+//assign led[3:1] = n.stage;
 
 endmodule

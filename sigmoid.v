@@ -35,12 +35,12 @@ wire div_start = (stage == 2);
 wire add_start_2 = (stage == 4);
 wire mul_start = (stage == 6);
 
-wire add_rst_n = (stage != 0);
-wire div_rst_n = (stage != 2);
+wire add_rst_n = (rst_n);
+wire div_rst_n = (stage != 2); //negedge right before stage == 2
 wire add_rst_n_2 = (stage != 4);
 wire mul_rst_n = (stage != 6);
 
-wire nan, zero, overflow, underflow, done, divzero;
+wire nan, zero, overflow, underflow,  divzero;
 
 assign done = (stage == 8);
 
@@ -50,60 +50,64 @@ always @(negedge clk) begin
 end
 
 always @(posedge clk) begin
-	case(stage)
-		0: begin
-			if(!start)
-				stage = stage + 1;
-		end
-		1: begin
-			if(stage_done[0]) begin
-				stage = stage + 1;	
+	if(start)
+		stage = 0;
+	else begin
+		case(stage)
+			0: begin
+				if(!start)
+					stage = stage + 1;
 			end
-		end
-		2: begin
-			stage = stage + 1;
-		end
-		3: begin
-			if(stage_done[1]) begin
-				stage = stage+1;
+			1: begin
+				if(stage_done[0]) begin
+					stage = stage + 1;	
+				end
 			end
-		end
-		4: begin
-			stage = stage + 1;
-		end
-		5: begin
-			if(stage_done[2]) begin
+			2: begin
 				stage = stage + 1;
 			end
-		end
-		6: begin
-			stage = stage + 1;
-		end
-		7: begin
-			if(stage_done[3]) begin
+			3: begin
+				if(stage_done[1]) begin
+					stage = stage+1;
+				end
+			end
+			4: begin
 				stage = stage + 1;
 			end
-		end
-		8: begin
+			5: begin
+				if(stage_done[2]) begin
+					stage = stage + 1;
+				end
+			end
+			6: begin
+				stage = stage + 1;
+			end
+			7: begin
+				if(stage_done[3]) begin
+					stage = stage + 1;
+				end
+			end
+			8: begin
 
-		end
-		default: begin
+			end
+			default: begin
 
-		end
+			end
 		endcase
 	end
+end
 
-	// TODO : change start/done signals
-	generate
-	genvar i;
-	for(i=0; i<N; i=i+1) begin : each
-		wire [S-1:0] absx = {1'b0, x[S*(i+1)-2:S*i]};
-		add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
-		div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), divzero, nan, overflow, underflow, zero, stage_done[1]); // x / (abs(x)+1)
-		add_float #(.FLOAT_WIDTH(S)) a2(add_rst_n_2, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
-		mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
-	end
-	endgenerate
+// TODO : change start/done signals
+generate
+genvar i;
+for(i=0; i<N; i=i+1) begin : each
+	wire [S-1:0] absx = {1'b0, x[S*(i+1)-2:S*i]};
+	add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
+	div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), divzero, nan, overflow, underflow, zero, stage_done[1]); // x / (abs(x)+1)
+	add_float #(.FLOAT_WIDTH(S)) a2(add_rst_n_2, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
+	mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
+end
+endgenerate
 
-	endmodule
+endmodule
 `endif

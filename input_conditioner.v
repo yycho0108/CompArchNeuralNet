@@ -1,3 +1,5 @@
+`ifndef __INPUT_CONDITIONER_V__
+`define __INPUT_CONDITIONER_V__
 //------------------------------------------------------------------------
 // Input Conditioner
 //    1) Synchronizes input to clock domain
@@ -45,3 +47,4 @@ output reg  negativeedge    // 1 clk pulse at falling edge of conditioned
         synchronizer1 <= synchronizer0;
     end
 endmodule
+`endif

@@ -15,7 +15,8 @@
 
 module accumulate
 // accumulate elements of I and put it into O
-#(parameter S=32, parameter C=2)
+//X =  splitting line for recursive accumulation
+#(parameter S=32, C=2, X=2**($clog2(C)-1))
 (
 	input rst_n,
 	input clk,
@@ -24,8 +25,6 @@ module accumulate
 	output [S-1:0] O, // 1 floating point number
 	output done
 );
-
-localparam X = 2 ** ($clog2(C)-1); // splitting line for recursive accumulation
 
 reg [1:0] stage = 0; //accum --> add
 wire add_start = (stage == 1);

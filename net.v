@@ -122,7 +122,7 @@ always @(posedge clk) begin
 		end
 		5: begin
 			if(sig_done) begin
-				//$display("Y : %H", y);
+				//$display(".>Y : %H", y);
 				stage = stage + 1;
 			end
 		end
