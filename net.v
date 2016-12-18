@@ -58,7 +58,8 @@ wire [S*O-1:0] b;
 genvar i,o;
 generate
 for(o=0; o<O; o=o+1) begin
-	assign b[S*(o+1)-1:S*o] = _b[o];
+	assign `ELEM(b,o,0,O,1,S) = _b[o];
+	//assign b[S*(o+1)-1:S*o] = _b[O-1-o]; // load backwards.
 	for(i=0; i<I; i=i+1) begin
 		assign `ELEM(W,o,i,O,I,S) = _W[i];
 	end
@@ -105,10 +106,14 @@ always @(posedge clk) begin
 			end
 		end
 		2: begin
+			//$display("I : %H", x);
+			//$display("O : %H", o_1);
 			stage = 3;
 		end
 		3: begin
 			if(add_done) begin
+				//$display("B : %H", b);
+				//$display("O_2 : %H", o_2);
 				stage = stage + 1;
 			end
 		end
@@ -117,6 +122,7 @@ always @(posedge clk) begin
 		end
 		5: begin
 			if(sig_done) begin
+				//$display("Y : %H", y);
 				stage = stage + 1;
 			end
 		end
