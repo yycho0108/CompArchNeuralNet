@@ -5,7 +5,7 @@
 `include "add_float.v"
 
 // TODO : check valid index
-`define IDX(i,j,h,w) (((h)*(w)-1) - ((j)*(h)+i)) // indexed somewhat unconventionally
+`define IDX(i,j,h,w) (((h)*(w)-1) - ((i)*(w)+j)) // indexed somewhat unconventionally
 `define ELEM(m,i,j,h,w,s) m[s*(1+`IDX(i,j,h,w))-1:s*`IDX(i,j,h,w)]
 
 
@@ -100,11 +100,14 @@ module matmul // size = 32 bits, width, height, common
 		output done
 	);
 
-	reg [2:0] stage;
+	reg [2:0] stage = 0;
 
 	wire mul_start = (stage == 0);
 	wire accum_start = (stage == 2);
-
+	always @(negedge clk) begin
+		if(start)
+			stage = 0;
+	end
 	always @(posedge clk) begin
 		if(start)
 			stage = 0;
