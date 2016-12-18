@@ -61,7 +61,7 @@ for(o=0; o<O; o=o+1) begin
 	assign `ELEM(b,o,0,O,1,S) = _b[o];
 	//assign b[S*(o+1)-1:S*o] = _b[O-1-o]; // load backwards.
 	for(i=0; i<I; i=i+1) begin
-		assign `ELEM(W,o,i,O,I,S) = _W[i];
+		assign `ELEM(W,o,i,O,I,S) = _W[o*I+i]; //m,i,j,h,w,s
 	end
 end
 
