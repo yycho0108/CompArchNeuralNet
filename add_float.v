@@ -149,7 +149,7 @@ module add_float
   wire is_nan_result = left_is_nan || right_is_nan || (left_is_inf && right_is_inf && real_op),
   is_overflow_result = result_exp_reg[EXP_WIDTH] && !result_exp_reg[EXP_WIDTH - 1],
   is_inf_result = !is_nan_result && (left_is_inf || right_is_inf || is_overflow_result),
-  is_zero = result_frac_reg[FRACTION_WIDTH: 2] == 0,
+  is_zero = result_frac_reg[FRACTION_WIDTH: 0] == 0,
   is_underflow_result = !is_zero && (result_exp_reg[EXP_WIDTH] || (result_exp_reg[EXP_WIDTH - 1: 0] == 0)),
   result_sign = left_sign ^ (swap && op_sub);
   

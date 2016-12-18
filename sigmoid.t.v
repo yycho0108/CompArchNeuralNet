@@ -29,7 +29,7 @@ initial begin
 
 	rst_n = 1'b0;
 	@(negedge clk);
-	x = {32'h0, 32'h40a00000};
+	x = {32'hc0733333,32'h40a00000};
 	start = 1'b1;
 	@(negedge clk);
 	start = 1'b0;
@@ -39,7 +39,7 @@ initial begin
 
 	rst_n = 1'b0;
 	@(negedge clk);
-	x = {32'h40a00000, 32'hc0733333};
+	x = {32'h0, 32'h40a00000};
 	start = 1'b1;
 	@(negedge clk);
 	start = 1'b0;

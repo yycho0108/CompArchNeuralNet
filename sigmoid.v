@@ -1,12 +1,13 @@
 `ifndef __SIGMOID_V__
 `define __SIGMOID_V__
+
 `include "div_float.v"
 `include "mul_float.v"
 `include "add_float.v"
 `define GET(v,e,s) v[(e+1)*s-1:e*s]
 
 module sigmoid
-#(parameter S=32, parameter N=1)
+#(parameter S=32, parameter N=2)
 (
 	input clk,
 	input rst_n,
@@ -29,26 +30,20 @@ wire [S*N-1:0] hpx; // half plus xdo
 
 wire [3:0] stage_done;
 
-wire add_start;
-wire div_start;
-wire add_start_2;
-wire mul_start;
+wire add_start = (stage == 0);
+wire div_start = (stage == 2);
+wire add_start_2 = (stage == 4);
+wire mul_start = (stage == 6);
 
-assign add_start = (stage == 0);
-assign div_start = (stage == 2);
-assign add_start_2 = (stage == 4);
-assign mul_start = (stage == 6);
-
-wire add_rst_n = (stage == 1) ;
-wire div_rst_n = (stage == 3);
-wire add_rst_n_2 = (stage == 5);
-wire mul_rst_n = (stage == 7);
+wire add_rst_n = (stage != 0);
+wire div_rst_n = (stage != 2);
+wire add_rst_n_2 = (stage != 4);
+wire mul_rst_n = (stage != 6);
 
 wire nan, zero, overflow, underflow, done, divzero;
 
 assign done = (stage == 8);
 
-// read ... 
 always @(negedge clk) begin
 	if(start)
 		stage = 0;
@@ -57,7 +52,8 @@ end
 always @(posedge clk) begin
 	case(stage)
 		0: begin
-			stage = stage + 1;
+			if(!start)
+				stage = stage + 1;
 		end
 		1: begin
 			if(stage_done[0]) begin
@@ -101,9 +97,8 @@ always @(posedge clk) begin
 	generate
 	genvar i;
 	for(i=0; i<N; i=i+1) begin : each
-		wire [S-1:0] absx = {1'b0, x[S*(i+1)-1:S*i]};
-		wire dummy;
-		add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, one, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
+		wire [S-1:0] absx = {1'b0, x[S*(i+1)-2:S*i]};
+		add_float #(.FLOAT_WIDTH(S)) a1(add_rst_n, clk, add_start, 1'b0, absx, one, `GET(opax,i,S), nan, overflow, underflow, zero, stage_done[0]); // abs(x) + 1
 		div_float #(.FLOAT_WIDTH(S)) d1(div_rst_n, clk, div_start, `GET(x,i,S), `GET(opax,i,S), `GET(xdo,i,S), divzero, nan, overflow, underflow, zero, stage_done[1]); // x / (abs(x)+1)
 		add_float #(.FLOAT_WIDTH(S)) a2(add_rst_n_2, clk, add_start_2, 1'b0, `GET(xdo,i,S), one, `GET(hpx,i,S), nan, overflow, underflow, zero, stage_done[2]);
 		mul_float #(.FLOAT_WIDTH(S)) mul(mul_rst_n, clk, mul_start, `GET(hpx,i,S), half, `GET(y,i,S), nan, overflow, underflow, zero, stage_done[3]);
