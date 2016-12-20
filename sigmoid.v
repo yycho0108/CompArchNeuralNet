@@ -35,7 +35,7 @@ wire div_start = (stage == 2);
 wire add_start_2 = (stage == 4);
 wire mul_start = (stage == 6);
 
-wire add_rst_n = (rst_n);
+wire add_rst_n = (stage != 0);
 wire div_rst_n = (stage != 2); //negedge right before stage == 2
 wire add_rst_n_2 = (stage != 4);
 wire mul_rst_n = (stage != 6);

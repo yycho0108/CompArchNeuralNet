@@ -161,16 +161,9 @@ module net
 localparam S = 32;
 
 reg [2:0] stage = 0;
-//always @(negedge clk) begin
-//	if(start) begin
-//		stage = 0;
-//	end
-//end
 
 wire [H*32-1:0] o_1; // intermediate unit for hidden layer
 wire done_1, done_2;
-wire start_1, start_2;
-
 
 layer #(.S(S), .I(I), .O(H)) l_1(clk, l_1_rst_n, start_1, x, o_1, done_1);
 layer #(.S(S), .I(H), .O(O)) l_2(clk, l_2_rst_n, start_2, o_1, y, done_2);
@@ -185,8 +178,8 @@ end
 wire l_1_rst_n = !start_1;
 wire l_2_rst_n = !start_2;
 
-assign start_1 = (stage == 0);
-assign start_2 = (stage == 2);
+wire start_1 = (stage == 0);
+wire start_2 = (stage == 2);
 
 assign done = (stage == 4);
 
