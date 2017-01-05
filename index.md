@@ -8,7 +8,7 @@ layout: default
 ### Links
 
 - [Proposal](https://docs.google.com/document/d/1ULqsxGpxzVEamMZO5F3Pto4A9VCm7r37K5DoMaEWpnU/edit?usp=sharing)
-- [Demo Video](http://www.youtube.com)
+- [Demo Video](https://www.youtube.com/watch?v=UKsqzIlWN68)
 
 ### Project Definition
 
@@ -27,7 +27,10 @@ Below is the diagram of the overall network:
 
 But in order to understand the process, a bit of background in the field is necessary.
 
+
 A Neural Network is a recent advance in computer science, inspired by biological interaction of neurons, that simulate the procedure of thought and training via enhancing the activation of a neuron *responsible* for a certain output. These neurons act in parallel to form a layer which, when stacked together, ultimately construct a *Deep Neural Network* that can act as highly intelligent function approximators, even for non-linear functions.
+
+![net-cxn](images/net-cxn.jpeg)
 
 Since the input to each neuron, except the direct input layer, is a sum of activations from the connected neurons from the previous layer, the procedure can be encapsuled into a simple matrix multiplication:
 
