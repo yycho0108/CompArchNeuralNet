@@ -1,5 +1,23 @@
 all : mul_float.o add_float.o comp_float.o matmul.o sigmoid.o net.o net_wrapper.o
 
+.PHONY: run
+
+run: all
+	@echo "===== -- mul_float -- ====="
+	./mul_float.o
+	@echo "===== -- add_float -- ====="
+	./add_float.o
+	@echo "===== -- comp_float -- ====="
+	./comp_float.o
+	@echo "===== -- matmul -- ====="
+	./matmul.o
+	@echo "===== -- sigmoid -- ====="
+	./sigmoid.o
+	@echo "===== -- net -- ====="
+	./net.o
+	@echo "===== -- net_wrapper -- ====="
+	./net_wrapper.o
+
 mul_float.o : mul_float.v mul_float.t.v
 	iverilog mul_float.t.v -o mul_float.o
 

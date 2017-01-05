@@ -45,7 +45,7 @@ wire done;
 net #(.I(`INPUT), .O(`OUTPUT), .H(`HIDDEN), .D(1)) n(clk, rst_n, start, x, y, done);
 
 always @(posedge done) begin
-	$display("%H", y);
+	$display("%H ^ %H = %H", x[31:0], x[63:32], y);
 end
 
 initial begin

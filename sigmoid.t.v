@@ -20,7 +20,7 @@ always begin
 end
 
 always @(posedge done) begin
-	$display("%H  %H", x, y);
+	$display("%H --> %H", x, y);
 end
 
 initial begin

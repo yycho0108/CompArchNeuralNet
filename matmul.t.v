@@ -49,11 +49,15 @@ always begin
 end
 
 always @(posedge done) begin
-	$display("a b o");
 	//print_mat (a);
 	//print_mat(`COMMON, `WIDTH, b);
 	//print_mat(`HEIGHT, `WIDTH, o);
-	$display("%H %H %H", a, b, o);
+	$display("a");
+	$display("%H", a);
+	$display("b");
+	$display("%H", b);
+	$display("o");
+	$display("%H", o);
 end
 
 initial begin

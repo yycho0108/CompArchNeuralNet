@@ -22,14 +22,14 @@ def main():
         plt.plot(xs,f(xs))
 
 
-        plt.title('polynomial fitting of sigmoid functions')
-        plt.legend(['sigmoid', 'fast sigmoid', 'polyfit'])
+        plt.title('Approximated Sigmoid')
+        plt.legend(['sigmoid', 'fast sigmoid', 'polyfit'], loc='lower right')
 
         plt.show()
     else:
         x = float(sys.argv[1])
-        print sigmoid(x)
-        print fast_sigmoid(x)
+        print 'sigmoid :', sigmoid(x)
+        print 'approx :', fast_sigmoid(x)
 
 if __name__ == "__main__":
     main()
