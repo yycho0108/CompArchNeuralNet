@@ -184,4 +184,10 @@ Anyhow, I was able to load the parameters onto the network and verify the result
 
 Implementing an FPU library *and* building a neural network would have been beyond the scope of this project, so I used the FPU library from [here](https://github.com/arktur04/FPU). In retrospect, this particular choice of the FPU library was unfortunate since it wasn't very synthesis-friendly and caused conflicts when implementing on the FPGA; by the time I realized the network architecture was so heavily dependent on the FPU that it couldn't be redone.
 
-One of the pitfalls on stage-based operations that I fear my implementation wasn't very robust against was the principle of reading and writing at different clock edges. Without having a well-established principle, the transferred data has no guarantee to be the desired one.
+#### Next Steps
+
+One of the pitfalls on stage-based operations that I fear my implementation wasn't very robust against was the principle of *reading and writing at different clock edges*. Without having a well-established principle, the transferred data has no guarantee to be the desired one.
+
+To list some of the more obvious shortcomings, the network is not *trainable*, which essentially means that once the parameters have been loaded, no further modifications or learning of the network can be done. In general, back-propagation is more difficult to implement than a simple feed-forward process, and the network architecture may need modifications in order to accomodate some of the more advanced techniques to facilitate the training procedure. As such, a high degree of familiarity in both the field of Artificial Intelligence and floating-point arithmetic is recommended for those who would like to develop upon this project.
+
+Another feature that the network would greatly benefit from is to implement pipelining. Even if the network itself is generally parallel, it is split into several sequential phases, failing to take advantage of the idle time of the small processing units that can otherwise be spent computing the outputs for the upcoming input. However, implementing this would also entail modifying the network architecture to at least accomodate mini-batch learning, which may be nontrivial depending on how much collision occurs between the current architecture.
