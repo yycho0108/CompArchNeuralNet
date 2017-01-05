@@ -5,7 +5,7 @@ layout: default
 ---
 ![Net](images/net.jpg)
 
-## Links
+### Links
 
 - [Proposal](https://docs.google.com/document/d/1ULqsxGpxzVEamMZO5F3Pto4A9VCm7r37K5DoMaEWpnU/edit?usp=sharing)
 - [Demo Video](http://www.youtube.com)
@@ -20,7 +20,12 @@ The operations that govern a neural network are, by nature, heavily parallel, wh
 
 ### How did I do this?
 
-In order to understand the process, a bit of background in the field is necessary.
+Below is the diagram of the overall network:
+<div style="text-align:center;">
+<img src="images/diagram.png"></img>
+</div>
+
+But in order to understand the process, a bit of background in the field is necessary.
 
 A Neural Network is a recent advance in computer science, inspired by biological interaction of neurons, that simulate the procedure of thought and training via enhancing the activation of a neuron *responsible* for a certain output. These neurons act in parallel to form a layer which, when stacked together, ultimately construct a *Deep Neural Network* that can act as highly intelligent function approximators, even for non-linear functions.
 
