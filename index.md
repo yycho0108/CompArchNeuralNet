@@ -126,7 +126,51 @@ It should be noted that the resulting number is exactly the same; the number (c0
 
 As a quick aside, it should be noted that since the sigmoid function is relatively sensitive to small changes, the precomputed weights must also be trained with the same activation function; i.e. a sigmoid network and fast-sigmoid trained weights may not be compatible.
 
+#### Network
+
+After matrix multiplication and sigmoid activation are established, constructing a layer is as simple as a chained operation of matrix multiplication, adding the bias, and applying the activation function. The role of the bias neuron is more of a practical solution to speeding up the convergence were we to train the network, but this is not essential to the feedforward network such as this -- it acts as simply another parameter.
+
+The Network itself, then, is simply a stack of these layers. In the implementation, the network was defined to have one hidden layer of four neurons, resulting in the net topology of 2-4-1. As this is a relatively simple network, all hidden layers, should there have been multiple, would perform the same operation, simply at different stages.
+
+The network has been tuned for the XOR function, which is the most basic differentiator that indicates a successful implementation of a neural network -- it implies non-linearity.
+
+| a | b | Output (hex) | Output (float) | Thresholded | a $$\oplus$$ b |
+|---|---|-----------|-------------|-------------|-------------|
+| 0 | 0 | 3dbd05b0  | 0.092296    | 0           | 0           |
+| 0 | 1 | 3f699867  | 0.912482    | 1           | 1           |
+| 1 | 0 | 3f613c50  | 0.879827    | 1           | 1           |
+| 1 | 1 | 3e20d3ee  | 0.157058    | 0           | 0           |
+
+As seen, the network successfully computes the output of an XOR function.
+
+For the process, see the waveform:
+
+![net-wave](images/net-wave.png)
+
+The waveform itself is quite simple, as the complex procedures are embedded and have been illustrated above.
+
 ### Building Upon the Project 
+
+#### Code
+
+The code for this project are all hosted on [github](https://github.com/yycho0108/FinalProject).
+
+#### Building & Running the Code
+
+Simply run the makefile in the root directory, as follows:
+
+```bash
+make
+```
+The same goes for building the conversion scripts.
+
+To run the code, simply run each of the generated executables individually.
+
+If you only want to obtain the respective .vcd files, run:
+
+```bash
+make run
+```
 
 #### Limitations
 
@@ -140,16 +184,4 @@ Anyhow, I was able to load the parameters onto the network and verify the result
 
 Implementing an FPU library *and* building a neural network would have been beyond the scope of this project, so I used the FPU library from [here](https://github.com/arktur04/FPU). In retrospect, this particular choice of the FPU library was unfortunate since it wasn't very synthesis-friendly and caused conflicts when implementing on the FPGA; by the time I realized the network architecture was so heavily dependent on the FPU that it couldn't be redone.
 
-#### Challenges
-
-Floating Point Library
-
-Stage-Based Computation
-
-Matrix Multiplication and Indexing
-
-Compiling Time
-
-Implementing on the FPGA - ambiguous clocks, non-synthesizable FPU
-
-
+One of the pitfalls on stage-based operations that I fear my implementation wasn't very robust against was the principle of reading and writing at different clock edges. Without having a well-established principle, the transferred data has no guarantee to be the desired one.
