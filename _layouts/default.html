@@ -7,6 +7,21 @@
 		<link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
 		<link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
 		<link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+		<style>
+			#nav{
+				width : 200px;
+				height: 100%;
+				box-shadow: 0px 1px 50px aquamarine;
+				padding-top: 1em;
+			}
+			.nav-ul a, #nav p{
+				color : aquamarine;
+				font-size: 25px;
+			}
+			.nav-ul li{
+				padding : 0em 1em 0em 1em;
+			}
+		</style>
 		<script type="text/javascript" async
 		  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
 		</script>
@@ -18,6 +33,21 @@
 
 	<body>
 		<div id="container">
+		<div id="nav" style="position:fixed; top:0px; background-color:black; align:center; text-align:center;">
+			<p>Index</p>
+			<hr>
+			<ul class="nav-ul">
+				<li><a href="#links">Links</a></li>
+				<li>|</li>
+				<li><a href="#what-did-i-do">What?</a></li>
+				<li>|</li>
+				<li><a href="#why-did-i-do-it">Why?</a></li>
+				<li>|</li>
+				<li><a href="#how-did-i-do-this">How?</a></li>
+				<li>|</li>
+				<li><a href="#building-upon-the-project">Next Steps</a></li>
+			</ul>
+		</div>
 			<div class="inner">
 				<header>
 					<h1>{{page.title}}</h1>

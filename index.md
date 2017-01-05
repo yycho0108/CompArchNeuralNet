@@ -3,7 +3,6 @@ title: Verilog Neural Network
 description: Generic Deep Neural Network with Synthesizable Verilog
 layout: default
 ---
-
 ![Net](images/net.jpg)
 
 ## Links
