@@ -10,15 +10,15 @@ layout: default
 - [Proposal](https://docs.google.com/document/d/1ULqsxGpxzVEamMZO5F3Pto4A9VCm7r37K5DoMaEWpnU/edit?usp=sharing)
 - [Demo Video](http://www.youtube.com)
 
-### What did I do?
+### Project Definition
 
 I implemented a generic feed-forward [Artificial Neural Network](https://en.wikipedia.org/wiki/Artificial_neural_network) in verilog.
 
-### Why did I do it?
+### Motivation
 
 The operations that govern a neural network are, by nature, heavily parallel, whereas a CPU is mostly sequential - even for ones with multiple cores. Modern machine-learning architectures take advantage of the massively parallel processing power of the GPU to accelerate the training and computing process, but [recent benchmarks](https://liu.diva-portal.org/smash/get/diva2:930724/FULLTEXT01.pdf) show that as more parallelism is required, smaller scale, breadth-centric computing devices such as FPGAs can outperform GPUs; indeed, unlike GPUs that require external computing interfaces, FPGAs can be a efficient and independent alternative to the task of training the neural network and computing predictions. Although I was unaware of this at the time, Microsoft has announced a [similar push](https://www.top500.org/news/microsoft-goes-all-in-for-fpgas-to-build-out-cloud-based-ai/) towards using FPGAs in the field of Artificial Intelligence.
 
-### How did I do this?
+### Process and Results
 
 Below is the diagram of the overall network:
 <div style="text-align:center;">
@@ -153,7 +153,7 @@ For the process, see the waveform:
 
 The waveform itself is quite simple, as the complex procedures are embedded and have been illustrated above.
 
-### Building Upon the Project 
+### Afterwords
 
 #### Code
 
